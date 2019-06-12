@@ -17,3 +17,9 @@ Open serialmonitor and use the following commands: <br>
 &#60;sh1> //start shutter <br>
 &#60;sh0> //stop shutter <br>
 &#60;pw0> //power off all cams
+
+# Additional informations
+M1BSSID is only to be changed if you want to reference the status message of the camera to the MAC address.
+When the camera sends ST, the status message with the MAC address is written in the serialmonitor. If the MAC address is not known to the program, the message of the camera will not be written.
+Unfortunately I can only find out which IP sends the message. The IP is not fixed, so variable. Therefore, one has to refer to the IP with the MAC address and you can say that if this IP writes, it is this MAC. I hope this is understandable... 
+The same goes for M2BSSID and so on.
