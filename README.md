@@ -10,12 +10,10 @@ The command CM (change mode) does not work. I would like to be able to set all c
 # How to use:
 First of all, no changes in the code are necessary. Only when the claims grow, changes must be made.
 
-Open serialmonitor and use the following commands:
-'
-<rc1> //to start softAP, after that, you can connect cameras
-"<rc0>" //to stop softAP
-"<sh1>" //start shutter
-"<sh0>" //stop shutter
-"<pw0>" //power off all cams
-'
-all without quotes
+Open serialmonitor and use the following commands: <br>
+<br>
+&#60;rc1> //to start softAP, after that, you can connect cameras <br>
+&#60;rc0> //to stop softAP <br>
+&#60;sh1> //start shutter <br>
+&#60;sh0> //stop shutter <br>
+&#60;pw0> //power off all cams
