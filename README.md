@@ -20,6 +20,8 @@ Open serial monitor and use the following commands: <br>
 &#60;sh0> //stop shutter <br>
 &#60;pw0> //power off all cams
 
+If your camera does not connect, connect a smart remote in the camera while RC is active.
+
 # Additional informations
 I use this program to control 4 cameras at the same time. To do this, I use software on the PC. You can find this under GoEasyPro, written in vb.net with MS Visual Studio.
 
