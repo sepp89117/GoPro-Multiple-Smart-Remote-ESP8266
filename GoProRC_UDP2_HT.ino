@@ -314,7 +314,6 @@ void SubSerialMonitorCommand() {
 
   // Check for command from Serial Monitor
   if (ReadSerialMonitorString(sString) > 0) {
-    //String str(sString);
 
     if (strstr_P(sString, PSTR("<rc1>")) != NULL) { //strstr_P keeps sString in flash; PSTR avoid ram using
       //start softAP
