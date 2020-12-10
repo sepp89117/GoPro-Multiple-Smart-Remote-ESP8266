@@ -22,3 +22,5 @@ Open serial monitor and use the following commands: <br>
 
 # Additional informations
 I use this program to control 4 cameras at the same time. To do this, I use software on the PC. You can find this under GoEasyPro, written in vb.net with MS Visual Studio.
+
+Go to <a href="https://github.com/sepp89117/GoEasyPro">GoEasyPro</a>
