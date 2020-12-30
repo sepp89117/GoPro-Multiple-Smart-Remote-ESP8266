@@ -107,7 +107,18 @@ void setup() {
   //setup is done
   Serial.flush();
   Serial.println("");
-  Serial.println("Ready!");
+  Serial.println("");
+  Serial.println("Ready! Use the following commands:");
+  Serial.println("on          - Switches the smart remote on");
+  Serial.println("off         - Switches the smart remote off");
+  Serial.println("start       - Start recording");
+  Serial.println("stop        - Stop recording");
+  Serial.println("video       - Switches to video mode");
+  Serial.println("photo       - Switches to photo mode");
+  Serial.println("burst       - Switches to burst mode");
+  Serial.println("timelapse   - Switches to timelapse mode");
+  Serial.println("power0      - Turns off all cameras");
+  Serial.println();
 }
 
 void loop() {
