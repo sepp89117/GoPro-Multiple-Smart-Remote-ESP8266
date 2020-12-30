@@ -11,9 +11,9 @@ Change the MAC addresses to yours for Cam1Mac to Cam8Mac
 
 <b>Open serial monitor and use the following commands:</b> <br>
 <br>
-help      - Shows this help
-info      - Shows infos
-wakeup    - sends Wake on LAN to each camera
+help      - Shows this help<br>
+info      - Shows infos<br>
+wakeup    - sends Wake on LAN to each camera<br>
 on        - Switches the smart remote on<br>
 off       - Switches the smart remote off<br>
 start     - Start recording<br>
