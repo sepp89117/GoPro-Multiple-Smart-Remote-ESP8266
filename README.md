@@ -7,10 +7,10 @@ A big thank you to theContentMint for the inspiration for UDP and the port being
 Another thank you goes to KonradIT for inspiration ever to start with an ESP8266.
 
 # How to use:
-Change the MAC addresses to yours for Cam1Mac to Cam8Mac
+Change the MAC addresses to yours for ```Cam1Mac``` to ```Cam8Mac```
 
 <b>Open serial monitor and use the following commands:</b> <br>
-<br>
+```
 help      - Shows this help<br>
 info      - Shows infos<br>
 wakeup    - sends Wake on LAN to each camera<br>
@@ -23,10 +23,66 @@ photo     - Switches to photo mode<br>
 burst     - Switches to burst mode<br>
 timelapse - Switches to timelapse mode<br>
 power0    - Turns off all cameras
-
+```
 If your camera does not connect, connect a smart remote in the camera while RC is active.
 
+# LCD on serial monitor - funny but useless with multiple cameras
+For some fun, you can uncomment ```//#define PRINTLCD```. You will then see an LCD screen in the serial monitor. It looks like this:<br>
+```
+############################################################    
+####         #################################### ##########    
+###           ###  ########  ################ ### ### ######    
+###           ##   ########  ################# ##### #######    
+###           #    ########  ###################   #########    
+###           #    ########  ################## #   ########    
+###  ###      #    ########  ###############  # ##  #  #####    
+###  ###      #    ########  ################## ### ########    
+###  ###      ##   ########      ###############   #########    
+###           ###  ########      ############# ##### #######    
+####         ################################ ### ### ######    
+################################################# ##########    
+############################################################    
+                                                                
+  ##  ####   ####   ####           ###  ####                    
+ ### ##  ## ##  ## ##  ##         #### ##  ##                   
+  ## ##  ## ##  ## ##  ##        ## ## ##  ##                   
+  ## ##  ##  ####  ##  ## ##### ##  ##  ####                    
+  ## ##  ## ##  ## ##  ##       ###### ##  ##                   
+  ## ##  ## ##  ## ##  ##           ## ##  ##                   
+  ##  ####   ####   ####            ##  ####                    
+                                                                
+  ###########    #######                                        
+  ###########   #########                                       
+         ####  ####   ####                                      
+        ####   ####   ####                                      
+        ####   ####   ####                                      
+       #####   ####   ####                                      
+       ####    ####   ####                                      
+       ####    ####   ####                                      
+      #####    ####   ####                                      
+      ####     ####   ####                                      
+      ####     ####   ####                                      
+     #####     ####   ####                                      
+     ####      ####   ####                                      
+     ####      ####   ####                                      
+    #####      ####   ####                                      
+    ####       ####   ####                                      
+    ####        #########                                       
+   #####         #######                                        
+                                                                
+############################################################    
+                                                                
+                               ###############    #######       
+    ##  #   #      ##  ###     #             #   #       #      
+   ###  #   #     ### ## ##    #         ### #  #  #####  #     
+    ##  #   # #  #### ## ##   ##         ### #    #     #       
+    ##  #####   ## ##  ####   ##         ### #      ###         
+    ##  #   #   #####    ##   ##         ### #     #   #        
+    ##  #   # #    ## ## ##    #         ### #       #          
+   #### #   #      ##  ###     #             #      ###         
+                               ###############       #          
+```
 # Additional informations
 I use this program to control 4 cameras at the same time. To do this, I use software on the PC. You can find this under GoEasyPro, written in vb.net with MS Visual Studio.<br>
-<b> For use with GoEasyPro, "//#define GOEASYPRO" must be uncommented </b><br><br>
+<b> For use with GoEasyPro, ```//#define GOEASYPRO``` must be uncommented </b><br><br>
 Go to <a href="https://github.com/sepp89117/GoEasyPro">GoEasyPro</a>
