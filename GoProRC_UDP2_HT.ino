@@ -21,6 +21,7 @@ uint8_t Cam8Mac[6] = {0x04, 0x41, 0x69, 0x0, 0x0, 0x0};
 const int maxCams = 8;
 int numConnected = 0;
 int newConnected = 0;
+int registeredCams = 0;
 GoProCam cams[maxCams] = {GoProCam(Cam1Mac), GoProCam(Cam2Mac), GoProCam(Cam3Mac), GoProCam(Cam4Mac),
                           GoProCam(Cam5Mac), GoProCam(Cam6Mac), GoProCam(Cam7Mac), GoProCam(Cam8Mac)
                          };
@@ -104,6 +105,11 @@ void setup() {
   Serial.begin(115200);
   while (!Serial); // wait for serial attach
 
+  for (int i = 0; i < maxCams; i++) {
+    uint8_t* mac = cams[i].getMac();
+    if (mac[3] != 0x0 || mac[4] != 0x0 || mac[5] != 0x0) registeredCams++;
+  }
+
   //setup is done
   Serial.flush();
   Serial.println();
@@ -158,6 +164,9 @@ void printInfo() {
   uint8_t macAddr[6];
   WiFi.softAPmacAddress(macAddr);
   Serial.printf("RC MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+
+  Serial.print("Cams registered: ");
+  Serial.println(registeredCams);
 
   Serial.print("Cams connected: ");
   Serial.println(numConnected);
@@ -532,13 +541,18 @@ void serialPrintMac(uint8_t* bssid) {
 void sendWoL() { //sends Wake on LAN to each camera
   uint8_t preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   IPAddress addr(255, 255, 255, 255);
-
-  if (conn) Udp.stop();
+  bool isActive = conn;
+  
+  if (isActive){
+    Serial.println("Stop AP");
+    stopAP();
+  }
+  
   Udp.begin(9);
-  
+
   Serial.println();
-  
-  for (int x = 0; x < maxCams; x++) {
+
+  for (int x = 0; x < registeredCams; x++) {
     Udp.beginPacket(addr, 9);
     Udp.write(preamble, 6);
 
@@ -556,7 +570,12 @@ void sendWoL() { //sends Wake on LAN to each camera
 
   Udp.stop();
 
-  if (conn) Udp.begin(rcUdpPort);
+  if (isActive){
+    Serial.println("Wait 3 seconds");    
+    delay(3000);
+    Serial.println("Restart AP");
+    startAP();
+  }
 
   Serial.println();
 }
