@@ -107,6 +107,7 @@ void setup() {
   //setup is done
   Serial.flush();
   Serial.println("");
+  #ifndef GOEASYPRO
   Serial.println("");
   Serial.println("Ready! Use the following commands:");
   Serial.println("on          - Switches the smart remote on");
@@ -119,6 +120,7 @@ void setup() {
   Serial.println("timelapse   - Switches to timelapse mode");
   Serial.println("power0      - Turns off all cameras");
   Serial.println();
+  #endif
 }
 
 void loop() {
