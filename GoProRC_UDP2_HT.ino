@@ -1,6 +1,10 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUDP.h>
 #include "TimedTask.h"
+#include "GoProCam.h"
+
+//---If you are using GoEasyPro, remove the comment from the following line
+//#define GOEASYPRO
 
 //--------------------- GoPro MAC, IP and RSSI declarations ------------------------------------------------------------
 //---change these to yours
@@ -14,9 +18,12 @@ uint8_t Cam7Mac[6] = {0x04, 0x41, 0x69, 0x0, 0x0, 0x0};
 uint8_t Cam8Mac[6] = {0x04, 0x41, 0x69, 0x0, 0x0, 0x0};
 //---don't change the rest---
 
-uint8_t *CamMacArray[] = {Cam1Mac, Cam2Mac, Cam3Mac, Cam4Mac, Cam5Mac, Cam6Mac, Cam7Mac, Cam8Mac};
 const int maxCams = 8;
-uint8_t CamIPs[maxCams][4];
+int numConnected = 0;
+int newConnected = 0;
+GoProCam cams[maxCams] = {GoProCam(Cam1Mac), GoProCam(Cam2Mac), GoProCam(Cam3Mac), GoProCam(Cam4Mac),
+                          GoProCam(Cam5Mac), GoProCam(Cam6Mac), GoProCam(Cam7Mac), GoProCam(Cam8Mac)
+                         };
 //
 
 //--------------------- defines ---------------------------------------------------------------------------
@@ -24,7 +31,7 @@ uint8_t CamIPs[maxCams][4];
 //
 
 //--------------------- set MAC for NodeMCU 1.0 (ESP-12E) with 2.5.2 core ---------------------------------
-uint8_t ap_mac[] = {0x84, 0xF3, 0xEB, 0xE4, 0x23, 0xDD}; // MAC-Adsress of Smart-Remote
+uint8_t ap_mac[] = {0x84, 0xF3, 0xEB, 0xE4, 0x23, 0xDD}; // MAC-Adsress of Smart-Remote (Strangely, first byte has to be 0x84 to get 0x86 as a result)
 extern "C" void preinit() {
 #include "user_interface.h"
   wifi_set_opmode(SOFTAP_MODE);
@@ -33,20 +40,22 @@ extern "C" void preinit() {
 //
 
 //--------------------- heart beat declarations -----------------------------------------------------------
-long rateI = 0;                                  // durable counter 1
-long rateI2 = 0;                                 // durable counter 2
-long wtCount = 0;                                // "wt is send" counter
+long lowCounter = 0;                                  // durable counter 1
+long highCounter = 0;                                 // durable counter 2
+long cmdIndicator = 0;                                // "wt is send" counter
 //
 
 //--------------------- HT Threads ------------------------------------------------------------------------
-TimedAction heartBeatThread = TimedAction(700, heartBeat);
-TimedAction SubSerialMonitorCommandThread = TimedAction(50, SubSerialMonitorCommand);
+#ifdef GOEASYPRO
+TimedAction heartBeatThread = TimedAction(600, heartBeat);
+#else
+TimedAction heartBeatThread = TimedAction(1000, heartBeat);
+#endif
 //
 
 //--------------------- WiFi events ------------------------------------------------------------
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
-int toStationConnected = 0;
 //
 
 //--------------------- Cam-Commands ----------------------------------------------------------------------
@@ -58,18 +67,17 @@ uint8_t CMp[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0
 uint8_t CMb[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x02}; // change mode (2: 'burst')
 uint8_t CMl[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x03}; // change mode (3: 'timelapse')
 uint8_t CMd[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x06}; // change mode (6: 'default mode')
-uint8_t PA[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x41, 0x02, 0x01}; // switch mode by rc (incremental)
-uint8_t OO0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x00}; // used by rc, keeps udp connected
+//uint8_t OO0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x00}; // used by rc, keeps udp connected
 uint8_t OO1[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // used by rc, keeps udp connected
 uint8_t wt[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x77, 0x74}; // wifi
-uint8_t pw[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x70, 0x77}; // power
+//uint8_t pw[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x70, 0x77}; // power
 uint8_t st[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x74}; // status request
 uint8_t lc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x6C, 0x63, 0x05}; // get status display (w=60px, h=75px, 1bpp)
 //
 
 //--------------------- other declarations ----------------------------------------------------------------
-const unsigned int plocalPort = 8383;           // Port der Fernbedienung
-const unsigned int cremotePort = 8484;          // Port der Kamera
+const unsigned int rcUdpPort = 8383;           // Port der Fernbedienung
+const unsigned int camUdpPort = 8484;          // Port der Kamera
 const unsigned int wifiChannel = 1;             // Channel of my Smart-Remote = 1
 const char *ssid = "HERO-RC-A1111425435131";    // SSID of my Smart-Remote
 boolean conn = false;                           // indicator if AP is on
@@ -82,6 +90,7 @@ IPAddress subnet(255, 255, 255, 0);             // SM of my Smart-Remote
 
 //--------------------- instances -------------------------------------------------------------------------
 WiFiUDP Udp;
+WiFiClient _wifi_client;
 //
 
 //--------------------- program ---------------------------------------------------------------------------
@@ -102,16 +111,13 @@ void setup() {
 }
 
 void loop() {
-  yield();
+  receiveFromSerial();
 
-  SubSerialMonitorCommandThread.check();
+  if (newConnected > 0) {
+    getAssignedIp();
+  }
 
-  if (conn) {
-    if (toStationConnected > 0) {
-      clientStatus();
-    }
-
-    receiveFromCam();
+  if (numConnected > 0) {
     heartBeatThread.check();
   }
 }
@@ -120,51 +126,70 @@ void startAP() {
   WiFi.mode(WIFI_AP); // Set WiFi in AP mode
   WiFi.hostname("ESP_E423DD"); // Hostname of my Smart-Remote
 
-  rateI = 0; // durable counter 1 reset
-  rateI2 = 0; // durable counter 2 reset
-  wtCount = 0; // "wt is send" counter reset
+  lowCounter = 0; // durable counter 1 reset
+  highCounter = 0; // durable counter 2 reset
+  cmdIndicator = 0; // "wt is send" counter reset
   WiFi.softAPConfig(ip, gateway, subnet);
 
   //Start AP
-  WiFi.softAP(ssid, "", wifiChannel);
+  WiFi.softAP(ssid, NULL, wifiChannel, 0, maxCams); //ssid, NULL, wifiChannel, 0, maxCams
 
   //Start UDP
-  Udp.begin(plocalPort);
+  Udp.begin(rcUdpPort);
 
-  conn = true;
-
+#ifdef GOEASYPRO
   Serial.print("<rcOn>");
-  Serial.print(conn);
+  Serial.print(1);
   Serial.println("</rcOn>");
+#else
+  Serial.println("RC startetd");
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("RC IP address: ");
+  Serial.println(myIP);
+  uint8_t macAddr[6];
+  WiFi.softAPmacAddress(macAddr);
+  Serial.printf("RC MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+#endif
 }
 
 void stopAP() {
+  newConnected = 0;
+  numConnected = 0;
   Udp.stop();
   WiFi.softAPdisconnect(true);
-  conn = false;
-  WiFi.mode(WIFI_STA); // Set WiFi in STA mode
 
+  WiFi.mode(WIFI_STA); // Set WiFi in STA mode
+  _wifi_client.stop();
+
+  for (int i = 0; i < maxCams; i++) {
+    if (cams[i].getIp() != 0) {
+      cams[i].resetIp();
+      Serial.print("Cam ");
+      Serial.print(i + 1);
+      Serial.println(" disconnected from AP");
+    }
+  }
+
+#ifdef GOEASYPRO
   Serial.print("<rcOn>");
-  Serial.print(conn);
+  Serial.print(0);
   Serial.println("</rcOn>");
+#else
+  Serial.println("Remote off");
+#endif
 }
 
 void onStationConnected(const WiFiEventSoftAPModeStationConnected& evt) {
-  toStationConnected++; //sets todo for loop()
+  newConnected++; //sets todo for loop()
 }
 
 void onStationDisconnected(const WiFiEventSoftAPModeStationDisconnected& evt) {
-  uint8_t empty[] = {0, 0, 0, 0};
-
   for (int i = 0; i < maxCams; i++) {
-    if (memcmp(evt.mac, CamMacArray[i], 6) == 0) {
-      IPAddress iAdr(CamIPs[i]);
-      if (memcmp(empty, CamIPs[i], 4) != 0) {
-        for (int j = 0; j < 4; j++) {
-          CamIPs[i][j] = 0x0;
-        }
+    if (memcmp(evt.mac, cams[i].getMac(), 6) == 0) {
+      if (cams[i].getIp() != 0) {
+        cams[i].resetIp();
         Serial.print("Cam ");
-        Serial.print(i);
+        Serial.print(i + 1);
         Serial.println(" disconnected from AP");
       }
       break;
@@ -172,7 +197,7 @@ void onStationDisconnected(const WiFiEventSoftAPModeStationDisconnected& evt) {
   }
 }
 
-void clientStatus() {
+void getAssignedIp() {
   struct ip4_addr *IPaddress;
   IPAddress address;
   struct station_info *stat_info;
@@ -184,18 +209,19 @@ void clientStatus() {
     IPaddress = &stat_info->ip;
     address = IPaddress->addr;
 
-    for (int i = 0; i < maxCams; i++) {
-      if (memcmp(clientMac, CamMacArray[i], 6) == 0) {
-        IPAddress iAdr(CamIPs[i]);
 
-        if (iAdr != address) {
-          for (int j = 0; j < 4; j++) {
-            CamIPs[i][j] = address[j];
-          }
-          toStationConnected--;
+    for (int x = 0; x < maxCams; x++) {
+      if (memcmp(clientMac, cams[x].getMac(), 6) == 0) {
+        IPAddress xAdr(cams[x].getIp());
+
+        if (xAdr != address) {
+          cams[x].setIp((uint32_t)address);
           Serial.print("Cam ");
-          Serial.print(i);
+          Serial.print(x + 1);
           Serial.println(" connected to AP");
+
+          newConnected--;
+          numConnected++;
         }
         break;
       }
@@ -206,8 +232,8 @@ void clientStatus() {
 }
 
 byte ReadSerialMonitorString(char* sString) {
-  byte nCount;
-  nCount = 0;
+  byte nCount = 0;
+
   if (Serial.available() > 0) {
     Serial.setTimeout(50);
     nCount = Serial.readBytes(sString, MAX_CMD_LENGTH);
@@ -216,144 +242,179 @@ byte ReadSerialMonitorString(char* sString) {
   return nCount;
 }
 
-void sendToCam(uint8_t* req, int noBytes) {
-  heartBeatThread.reset();
-  SubSerialMonitorCommandThread.disable();
-
+void sendToCam(uint8_t* req, int numBytes) {
   struct ip4_addr *IPaddress;
   IPAddress address;
   stat_info = wifi_softap_get_station_info();
 
-  req[9] = (uint8_t)rateI2;
-  req[10] = (uint8_t)rateI;
+  req[9] = (uint8_t)highCounter;
+  req[10] = (uint8_t)lowCounter;
 
   while (stat_info != NULL) {
     IPaddress = &stat_info->ip;
     address = IPaddress->addr;
 
-    Udp.beginPacket(address, cremotePort);
-    Udp.write(req, noBytes);
+    Udp.beginPacket(address, camUdpPort);
+    Udp.write(req, numBytes);
     Udp.endPacket();
     stat_info = STAILQ_NEXT(stat_info, next);
   }
   wifi_softap_free_station_info();
 
   //count up
-  if (rateI >= 255) {
-    rateI2++;
-    rateI = 0;
+  if (lowCounter >= 255) {
+    highCounter++;
+    lowCounter = 0;
   }
-  if (rateI2 >= 255) {
-    rateI2 = 0;
+  if (highCounter >= 255) {
+    highCounter = 0;
   }
-  rateI++;
+  lowCounter++;
 
-  SubSerialMonitorCommandThread.enable();
+  for (int i = 0; i < numConnected; i++) {
+    receiveFromCam();
+  }
 }
 
 void receiveFromCam() {
-  int noBytes = Udp.parsePacket();
+  yield();
+  unsigned long receiveStart = millis();
 
-  if (noBytes) {
+  int numBytes = Udp.parsePacket();
+
+  while (!numBytes && 350 > millis() - receiveStart) { //350 is the receive timeout
+    yield();
+    numBytes = Udp.parsePacket();
+  }
+
+  if (numBytes) {
     char inCmd[3];
 
-    Udp.read(packetBuffer, noBytes); // read the packet into the buffer
+    Udp.read(packetBuffer, numBytes); // read the packet into the buffer
 
     inCmd[0] = packetBuffer[11];
     inCmd[1] = packetBuffer[12];
     inCmd[2] = 0; //terminate string
 
-    uint8_t* theBssid;
-    int camIndex = 0;
-
     for (int i = 0; i < maxCams; i++) {
-      IPAddress iAdr(CamIPs[i]);
+      IPAddress iAdr(cams[i].getIp());
       if (Udp.remoteIP() == iAdr) {
-        theBssid = CamMacArray[i];
-        camIndex = i;
+
+#ifdef GOEASYPRO
+        if (packetBuffer[13] == 0x1) {
+          // illegal command for camera
+          Serial.print("<illegal command \"");
+          Serial.print(inCmd);
+          Serial.print("\" in ");
+          serialPrintHex(packetBuffer, numBytes);
+          Serial.println(">");
+        } else {
+          Serial.print("<");
+          Serial.print(inCmd);
+          Serial.print(">");
+          serialPrintHex(packetBuffer, numBytes);
+          Serial.print("</");
+          Serial.print(inCmd);
+          Serial.print(">@");
+          serialPrintMac((uint8_t*)cams[i].getMac());
+          Serial.println();
+        }
+#else
+
+        if (packetBuffer[13] == 0x1) {
+          // illegal command for camera
+          Serial.print("Cam ");
+          Serial.print(i + 1);
+          Serial.println(" has sent: ");
+          Serial.print("Illegal command \"");
+          Serial.print(inCmd);
+          Serial.print("\", Buffer: ");
+          serialPrintHex(packetBuffer, numBytes);
+          Serial.println("");
+        } else {
+          if (strstr_P(inCmd, PSTR("st")) != NULL) {
+            Serial.print("Camera ");
+            Serial.print(i + 1);
+            Serial.println(" has sent: ");
+
+            Serial.print("Mode: ");
+            switch (packetBuffer[14]) { //mode
+              case 0x0: //video mode
+                Serial.println("video mode");
+                break;
+              case 0x1: //photo mode
+                Serial.println("photo mode");
+                break;
+              case 0x2: //burst mode
+                Serial.println("burst mode");
+                break;
+              case 0x3: //timelapse mode
+                Serial.println("timelapse mode");
+                break;
+            }
+
+            Serial.print("State: ");
+            switch (packetBuffer[15]) { //state
+              case 0x0: //standby
+                Serial.println("standby");
+                break;
+              case 0x1: //recording
+                Serial.println("recording");
+                break;
+            }
+
+            Serial.println();
+          }
+        }
+#endif
+
         break;
       }
-    }
-
-    if (packetBuffer[13] == 0x1) {
-      // illegal command for camera
-      Serial.print("<illegal command \"");
-      Serial.print(inCmd);
-      Serial.print("\" in ");
-      serialPrintHex(packetBuffer, noBytes);
-      Serial.println(">");
-    } else {
-      if (strstr_P(inCmd, PSTR("lc")) != NULL) { //Screen for RC
-        Serial.print("<lc>");
-        serialPrintHex(packetBuffer, noBytes);
-        Serial.print("</lc>@");
-        serialPrintMac((uint8_t*)theBssid);
-        Serial.println();
-      } else if (strstr_P(inCmd, PSTR("st")) != NULL) {
-        Serial.print("<st>");
-        serialPrintHex(packetBuffer, noBytes);
-        Serial.print("</st>@");
-        serialPrintMac((uint8_t*)theBssid);
-        Serial.println();
-      } else if (strstr_P(inCmd, PSTR("pw")) != NULL || strstr_P(inCmd, PSTR("wt")) != NULL) {
-        Serial.print("<pw1>");
-        serialPrintMac((uint8_t*)theBssid);
-        Serial.println("</pw1>");
-      }
-      //        else {
-      //          Serial.print("<uknw>");
-      //          serialPrintHex(packetBuffer, noBytes);
-      //          Serial.println("</uknw>");
-      //        }
     }
   }
 }
 
-void SubSerialMonitorCommand() {
+void receiveFromSerial() {
   char sString[MAX_CMD_LENGTH + 1];
 
   // Check for command from Serial Monitor
   if (ReadSerialMonitorString(sString) > 0) {
 
-    if (strstr_P(sString, PSTR("<rc1>")) != NULL) { //strstr_P keeps sString in flash; PSTR avoid ram using
+    if (strstr_P(sString, PSTR("<rc1>")) != NULL || strstr_P(sString, PSTR("on")) != NULL) { //strstr_P keeps sString in flash; PSTR avoid ram using
       //start softAP
       startAP();
 
-    } else if (strstr_P(sString, PSTR("<rc0>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<rc0>")) != NULL || strstr_P(sString, PSTR("off")) != NULL) {
       //stop softAP
       stopAP();
 
-    } else if (strstr_P(sString, PSTR("<sh1>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<sh1>")) != NULL || strstr_P(sString, PSTR("start")) != NULL) {
       //send record command
       sendToCam(SH1, 14);
       delay(50);
 
-    } else if (strstr_P(sString, PSTR("<sh0>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<sh0>")) != NULL || strstr_P(sString, PSTR("stop")) != NULL) {
       //send stop recording command
       sendToCam(SH0, 14);
       delay(50);
 
-    } else if (strstr_P(sString, PSTR("<cmv>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<cmv>")) != NULL || strstr_P(sString, PSTR("video")) != NULL) {
       sendToCam(CMv, 14); //change mode to video
       delay(50);
 
-    } else if (strstr_P(sString, PSTR("<cmp>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<cmp>")) != NULL || strstr_P(sString, PSTR("photo")) != NULL) {
       sendToCam(CMp, 14); //change mode to photo
       delay(50);
 
-    } else if (strstr_P(sString, PSTR("<cmb>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<cmb>")) != NULL || strstr_P(sString, PSTR("burst")) != NULL) {
       sendToCam(CMb, 14); //change mode to burst
       delay(50);
 
-    } else if (strstr_P(sString, PSTR("<cml>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<cml>")) != NULL || strstr_P(sString, PSTR("timelapse")) != NULL) {
       sendToCam(CMl, 14); //change mode to timelapse
       delay(50);
 
-    } else if (strstr_P(sString, PSTR("<pa>")) != NULL) {
-      sendToCam(PA, 15); //change mode by rc
-      delay(50);
-
-    } else if (strstr_P(sString, PSTR("<pw0>")) != NULL) {
+    } else if (strstr_P(sString, PSTR("<pw0>")) != NULL || strstr_P(sString, PSTR("power0")) != NULL) {
       sendToCam(PW0, 14);
       delay(200);
       sendToCam(PW0, 14);
@@ -379,37 +440,31 @@ void SubSerialMonitorCommand() {
 
 void heartBeat() {
   //rc sends 1x OO0, 1x OO1, 5x lc, 1x st
-  if (wtCount == 0) {
+  if (cmdIndicator == 0) {
+
+#ifdef GOEASYPRO
     sendToCam(lc, 14);
-    delay(50);
+#else
+    sendToCam(wt, 13);
+#endif
 
-    wtCount++;
-  } else if (wtCount == 1) {
+    cmdIndicator++;
+  } else if (cmdIndicator == 1) {
     sendToCam(st, 13);
-    delay(50);
 
-    wtCount++;
-  } else if (wtCount >= 2) {
-    sendToCam(OO0, 14);
-    delay(250);
+    cmdIndicator++;
+  } else if (cmdIndicator >= 2) {
+    //sendToCam(OO0, 14);
     sendToCam(OO1, 14);
-    delay(50);
 
-    wtCount = 0;
+    cmdIndicator = 0;
   }
 }
 
-void serialPrintHex(uint8_t msg[], int noBytes) {
-  for (int i = 0; i < noBytes; i++) {
+void serialPrintHex(uint8_t msg[], int numBytes) {
+  for (int i = 0; i < numBytes; i++) {
     Serial.print(msg[i], HEX);
-    if (i != noBytes - 1) Serial.print(" ");
-  }
-}
-
-void serialPrintHex(char msg[], int noBytes) {
-  for (int i = 0; i < noBytes; i++) {
-    Serial.print(msg[i], HEX);
-    if (i != noBytes - 1) Serial.print(" ");
+    if (i != numBytes - 1) Serial.print(" ");
   }
 }
 
@@ -420,11 +475,4 @@ void serialPrintMac(uint8_t* bssid) {
   Serial.print(bssid[3], HEX); Serial.print(":");
   Serial.print(bssid[4], HEX); Serial.print(":");
   Serial.print(bssid[5], HEX); Serial.print("");
-}
-
-String IpAddress2String(const IPAddress& ipAddress) {
-  return String(ipAddress[0]) + "." + \
-         String(ipAddress[1]) + "." + \
-         String(ipAddress[2]) + "." + \
-         String(ipAddress[3]);
 }
