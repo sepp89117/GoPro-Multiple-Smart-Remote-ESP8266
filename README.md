@@ -11,15 +11,15 @@ Change the MAC addresses to yours for Cam1Mac to Cam8Mac
 
 <b>Open serial monitor and use the following commands:</b> <br>
 <br>
-on //to start softAP, after that, you can connect cameras <br>
-off //to stop softAP <br>
-start //start shutter <br>
-stop //stop shutter <br>
-video //switch cams to video mode <br>
-photo //switch cams to photo mode <br>
-burst //switch cams to burst mode <br>
-timelapse //switch cams to timelapse mode <br>
-power0 //power off all cams
+on        - Switches the smart remote on<br>
+off       - Switches the smart remote off<br>
+start     - Start recording<br>
+stop      - Stop recording<br>
+video     - Switches to video mode<br>
+photo     - Switches to photo mode<br>
+burst     - Switches to burst mode<br>
+timelapse - Switches to timelapse mode<br>
+power0    - Turns off all cameras
 
 If your camera does not connect, connect a smart remote in the camera while RC is active.
 
