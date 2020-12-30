@@ -106,21 +106,12 @@ void setup() {
 
   //setup is done
   Serial.flush();
-  Serial.println("");
-  #ifndef GOEASYPRO
-  Serial.println("");
-  Serial.println("Ready! Use the following commands:");
-  Serial.println("on          - Switches the smart remote on");
-  Serial.println("off         - Switches the smart remote off");
-  Serial.println("start       - Start recording");
-  Serial.println("stop        - Stop recording");
-  Serial.println("video       - Switches to video mode");
-  Serial.println("photo       - Switches to photo mode");
-  Serial.println("burst       - Switches to burst mode");
-  Serial.println("timelapse   - Switches to timelapse mode");
-  Serial.println("power0      - Turns off all cameras");
   Serial.println();
-  #endif
+#ifndef GOEASYPRO
+  Serial.println();
+  Serial.println("Ready!");
+  printHelp();
+#endif
 }
 
 void loop() {
@@ -133,6 +124,44 @@ void loop() {
   if (numConnected > 0) {
     heartBeatThread.check();
   }
+}
+
+void printHelp(){
+  Serial.println();
+  Serial.println("Use the following commands:");
+  Serial.println("help        - Shows this help");
+  Serial.println("info        - Shows infos");
+  Serial.println("on          - Switches the smart remote on");
+  Serial.println("off         - Switches the smart remote off");
+  Serial.println("start       - Start recording");
+  Serial.println("stop        - Stop recording");
+  Serial.println("video       - Switches to video mode");
+  Serial.println("photo       - Switches to photo mode");
+  Serial.println("burst       - Switches to burst mode");
+  Serial.println("timelapse   - Switches to timelapse mode");
+  Serial.println("power0      - Turns off all cameras");
+  Serial.println();
+}
+
+void printInfo(){
+  Serial.println();
+  Serial.println("--------------- INFO ---------------");
+  
+  if(conn) Serial.println("RC is active!");
+  else Serial.println("RC is off!");
+  
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("RC IP address: ");
+  Serial.println(myIP);
+  
+  uint8_t macAddr[6];
+  WiFi.softAPmacAddress(macAddr);
+  Serial.printf("RC MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+
+  Serial.print("Cams connected: ");
+  Serial.println(numConnected);
+  Serial.println("------------------------------------");
+  Serial.println();
 }
 
 void startAP() {
@@ -150,18 +179,14 @@ void startAP() {
   //Start UDP
   Udp.begin(rcUdpPort);
 
+  conn = true;
+
 #ifdef GOEASYPRO
   Serial.print("<rcOn>");
   Serial.print(1);
   Serial.println("</rcOn>");
 #else
-  Serial.println("RC startetd");
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print("RC IP address: ");
-  Serial.println(myIP);
-  uint8_t macAddr[6];
-  WiFi.softAPmacAddress(macAddr);
-  Serial.printf("RC MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+  printInfo();
 #endif
 }
 
@@ -173,6 +198,8 @@ void stopAP() {
 
   WiFi.mode(WIFI_STA); // Set WiFi in STA mode
   _wifi_client.stop();
+
+  conn = false;
 
   for (int i = 0; i < maxCams; i++) {
     if (cams[i].getIp() != 0) {
@@ -204,6 +231,7 @@ void onStationDisconnected(const WiFiEventSoftAPModeStationDisconnected& evt) {
         Serial.print("Cam ");
         Serial.print(i + 1);
         Serial.println(" disconnected from AP");
+        Serial.println();
       }
       break;
     }
@@ -232,6 +260,7 @@ void getAssignedIp() {
           Serial.print("Cam ");
           Serial.print(x + 1);
           Serial.println(" connected to AP");
+          Serial.println();
 
           newConnected--;
           numConnected++;
@@ -443,6 +472,12 @@ void receiveFromSerial() {
     } else if (strstr_P(sString, PSTR("???")) != NULL) {
       //send whoAmI
       Serial.println("GPRC");
+
+    } else if (strstr_P(sString, PSTR("help")) != NULL) {
+      printHelp();
+
+    } else if (strstr_P(sString, PSTR("info")) != NULL) {
+      printInfo();
 
     } else {
       //undefiniert
