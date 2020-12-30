@@ -126,11 +126,12 @@ void loop() {
   }
 }
 
-void printHelp(){
+void printHelp() {
   Serial.println();
   Serial.println("Use the following commands:");
   Serial.println("help        - Shows this help");
   Serial.println("info        - Shows infos");
+  Serial.println("wakeup      - sends Wake on LAN to each camera");
   Serial.println("on          - Switches the smart remote on");
   Serial.println("off         - Switches the smart remote off");
   Serial.println("start       - Start recording");
@@ -143,17 +144,17 @@ void printHelp(){
   Serial.println();
 }
 
-void printInfo(){
+void printInfo() {
   Serial.println();
   Serial.println("--------------- INFO ---------------");
-  
-  if(conn) Serial.println("RC is active!");
+
+  if (conn) Serial.println("RC is active!");
   else Serial.println("RC is off!");
-  
+
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("RC IP address: ");
   Serial.println(myIP);
-  
+
   uint8_t macAddr[6];
   WiFi.softAPmacAddress(macAddr);
   Serial.printf("RC MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
@@ -479,6 +480,9 @@ void receiveFromSerial() {
     } else if (strstr_P(sString, PSTR("info")) != NULL) {
       printInfo();
 
+    } else if (strstr_P(sString, PSTR("wakeup")) != NULL) {
+      sendWoL();
+
     } else {
       //undefiniert
       Serial.println("unknown command");
@@ -523,4 +527,36 @@ void serialPrintMac(uint8_t* bssid) {
   Serial.print(bssid[3], HEX); Serial.print(":");
   Serial.print(bssid[4], HEX); Serial.print(":");
   Serial.print(bssid[5], HEX); Serial.print("");
+}
+
+void sendWoL() { //sends Wake on LAN to each camera
+  uint8_t preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  IPAddress addr(255, 255, 255, 255);
+
+  if (conn) Udp.stop();
+  Udp.begin(9);
+  
+  Serial.println();
+  
+  for (int x = 0; x < maxCams; x++) {
+    Udp.beginPacket(addr, 9);
+    Udp.write(preamble, 6);
+
+    for (uint8_t i = 0; i < 16; i++)
+    {
+      Udp.write(cams[x].getMac(), 6);
+    }
+
+    Udp.endPacket();
+
+    Serial.print("WoL: ");
+    serialPrintMac(cams[x].getMac());
+    Serial.println();
+  }
+
+  Udp.stop();
+
+  if (conn) Udp.begin(rcUdpPort);
+
+  Serial.println();
 }
