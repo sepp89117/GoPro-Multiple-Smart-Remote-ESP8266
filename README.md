@@ -1,5 +1,5 @@
 # GoPro-Multiple-Smart-Remote-ESP8266
-This code should show how to control several GoPros with a NodeMCU V1.0 (ESP-12E). It is designed for my purposes on four cameras. (GoPro Hero 5 black and HERO 7 black tested)
+This code should show how to control several GoPros with a NodeMCU V1.0 (ESP-12E) or a Wemos D1 mini. It is designed for my purposes on four cameras. (GoPro Hero 5 black, HERO 7 black and HERO 8 tested)
 
 I use the code with a VB.net Windows Forms Application. In this I have named the four cameras with their own names and can assign the individual status of the cameras by referencing from IP to MAC. 
 
