@@ -11,17 +11,17 @@ Change the MAC addresses to yours for ```Cam1Mac``` to ```Cam8Mac```
 
 <b>Open serial monitor and use the following commands:</b> <br>
 ```
-help      - Shows this help<br>
-info      - Shows infos<br>
-wakeup    - sends Wake on LAN to each camera<br>
-on        - Switches the smart remote on<br>
-off       - Switches the smart remote off<br>
-start     - Start recording<br>
-stop      - Stop recording<br>
-video     - Switches to video mode<br>
-photo     - Switches to photo mode<br>
-burst     - Switches to burst mode<br>
-timelapse - Switches to timelapse mode<br>
+help      - Shows this help
+info      - Shows infos
+wakeup    - sends Wake on LAN to each camera
+on        - Switches the smart remote on
+off       - Switches the smart remote off
+start     - Start recording
+stop      - Stop recording
+video     - Switches to video mode
+photo     - Switches to photo mode
+burst     - Switches to burst mode
+timelapse - Switches to timelapse mode
 power0    - Turns off all cameras
 ```
 If your camera does not connect, connect a smart remote in the camera while RC is active.
