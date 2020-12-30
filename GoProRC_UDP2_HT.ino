@@ -6,6 +6,9 @@
 //---If you are using GoEasyPro, remove the comment from the following line
 //#define GOEASYPRO
 
+//---If print LCD on serial monitor, remove the comment from the following line
+//#define PRINTLCD
+
 //--------------------- GoPro MAC, IP and RSSI declarations ------------------------------------------------------------
 //---change these to yours
 uint8_t Cam1Mac[6] = {0x04, 0x41, 0x69, 0x4F, 0x0F, 0x4B};
@@ -117,6 +120,7 @@ void setup() {
   Serial.println();
   Serial.println("Ready!");
   printHelp();
+
 #endif
 }
 
@@ -416,6 +420,10 @@ void receiveFromCam() {
             }
 
             Serial.println();
+          } else if (strstr_P(inCmd, PSTR("lc")) != NULL) {
+#ifdef PRINTLCD
+            serialPrintLc(packetBuffer);
+#endif
           }
         }
 #endif
@@ -424,6 +432,33 @@ void receiveFromCam() {
       }
     }
   }
+}
+
+void serialPrintLc(uint8_t* lcBuffer) {
+  //for (int y = 0; y < 75; y++) {
+  for (int y = 74; y > -1; y--) {
+
+    //remove spacing lines
+    if (y == 74 ||
+        y == 60 || y == 59 || y == 58 || y == 57 || y == 56 || y == 55 || 
+        y == 45 || y == 44 || y == 43 || y == 42 || y == 41 ||
+        y == 21 || y == 20 || y == 19 || y == 18 || y == 17 ||
+        y == 14 || y == 13 ||
+        y == 2 || y == 1 || y == 0) {
+      continue;
+    }
+
+    //print # on serial monitor for each pixel
+    for (int x = 0; x < 8; x++) {
+      for (int b = 0; b < 8; b++) {
+        if (x == 0 && b == 0) Serial.println();
+
+        if (bitRead(lcBuffer[(x + (y * 8)) + 15], 7 - b))Serial.print("#");
+        else Serial.print(" ");
+      }
+    }
+  }
+  Serial.println();
 }
 
 void receiveFromSerial() {
@@ -503,7 +538,7 @@ void heartBeat() {
   //rc sends 1x OO0, 1x OO1, 5x lc, 1x st
   if (cmdIndicator == 0) {
 
-#ifdef GOEASYPRO
+#if defined(GOEASYPRO) || defined(PRINTLCD)
     sendToCam(lc, 14);
 #else
     sendToCam(wt, 13);
@@ -542,12 +577,12 @@ void sendWoL() { //sends Wake on LAN to each camera
   uint8_t preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   IPAddress addr(255, 255, 255, 255);
   bool isActive = conn;
-  
-  if (isActive){
+
+  if (isActive) {
     Serial.println("Stop AP");
     stopAP();
   }
-  
+
   Udp.begin(9);
 
   Serial.println();
@@ -570,8 +605,8 @@ void sendWoL() { //sends Wake on LAN to each camera
 
   Udp.stop();
 
-  if (isActive){
-    Serial.println("Wait 3 seconds");    
+  if (isActive) {
+    Serial.println("Wait 3 seconds");
     delay(3000);
     Serial.println("Restart AP");
     startAP();
