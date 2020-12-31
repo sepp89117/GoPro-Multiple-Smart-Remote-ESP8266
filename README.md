@@ -13,7 +13,7 @@ Change the MAC addresses to yours for ```Cam1Mac``` to ```Cam8Mac```
 ```
 help      - Shows this help
 info      - Shows infos
-wakeup    - sends Wake on LAN to each camera
+wakeup    - Wakes up cameras that are in deep sleep (power0 sent)
 on        - Switches the smart remote on
 off       - Switches the smart remote off
 start     - Start recording
