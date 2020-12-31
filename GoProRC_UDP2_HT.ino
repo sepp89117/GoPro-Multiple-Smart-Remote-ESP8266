@@ -10,16 +10,16 @@
 //#define PRINTLCD
 
 //--------------------- GoPro MAC, IP and RSSI declarations ------------------------------------------------------------
-//---change these to yours
+//---Change these to yours, set the last three digits to 0x00 for Macs that are not in use
 uint8_t Cam1Mac[6] = {0x04, 0x41, 0x69, 0x4F, 0x0F, 0x4B};
 uint8_t Cam2Mac[6] = {0x04, 0x41, 0x69, 0x5E, 0x4A, 0x33};
 uint8_t Cam3Mac[6] = {0x04, 0x41, 0x69, 0x5F, 0x11, 0x39};
 uint8_t Cam4Mac[6] = {0x04, 0x41, 0x69, 0x5F, 0x72, 0x39};
-uint8_t Cam5Mac[6] = {0x04, 0x41, 0x69, 0x0, 0x0, 0x0};
-uint8_t Cam6Mac[6] = {0x04, 0x41, 0x69, 0x0, 0x0, 0x0};
-uint8_t Cam7Mac[6] = {0x04, 0x41, 0x69, 0x0, 0x0, 0x0};
-uint8_t Cam8Mac[6] = {0x04, 0x41, 0x69, 0x0, 0x0, 0x0};
-//---don't change the rest---
+uint8_t Cam5Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+uint8_t Cam6Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+uint8_t Cam7Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+uint8_t Cam8Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+//---Don't change the rest---
 
 const int maxCams = 8;
 int numConnected = 0;
@@ -71,12 +71,43 @@ uint8_t CMp[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0
 uint8_t CMb[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x02}; // change mode (2: 'burst')
 uint8_t CMl[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x03}; // change mode (3: 'timelapse')
 uint8_t CMd[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x06}; // change mode (6: 'default mode')
-//uint8_t OO0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x00}; // used by rc, keeps udp connected
-uint8_t OO1[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // used by rc, keeps udp connected
+uint8_t OO1[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // used by rc, keeps udp connected
 uint8_t wt[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x77, 0x74}; // wifi
-//uint8_t pw[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x70, 0x77}; // power
 uint8_t st[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x74}; // status request
-uint8_t lc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x6C, 0x63, 0x05}; // get status display (w=60px, h=75px, 1bpp)
+uint8_t lc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6C, 0x63, 0x05}; // get status display (w=60px, h=75px, 1bpp)
+
+//--------------------------- List of commands, supported by Hero5 black ---------------------------
+//--- GET (with byte(8) = 0)
+//uint8_t cc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63, 0x63}; // cam capabilities
+//uint8_t cm[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63, 0x6d}; // cam mode
+//uint8_t cv[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63, 0x76}; // cam version (response contains firmware version an model name)
+//uint8_t lc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6C, 0x63}; // lcd (get status display (w=60px, h=75px, 1bpp))
+//uint8_t pv[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x76}; // preview
+//uint8_t se[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x65}; // settings
+//uint8_t sh[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x68}; // shutter
+//uint8_t st[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x74}; // status
+//uint8_t um[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x74}; // usb mode
+//uint8_t vs[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x76, 0x73}; // protocol version
+//--- GET (with byte(8) = 1)
+//uint8_t cv[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x63, 0x76}; // cam version (response contains MAC an SSID)
+//uint8_t lc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x6C, 0x63}; // lcd (get status display (w=60px, h=75px, 1bpp))
+//uint8_t pw[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x70, 0x77}; // power
+//uint8_t se[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x73, 0x65}; // settings
+//uint8_t sh[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x73, 0x68}; // shutter
+//uint8_t vs[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x76, 0x73}; // protocol version
+//uint8_t wt[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x77, 0x74}; // wifi?
+//--- SET (with byte(8) = 0) (last byte is parameter)
+//uint8_t CM[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x43, 0x4d, 0x01}; // cam mode
+//uint8_t OO[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // one on one
+//uint8_t PV[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x56, 0x01}; // preview
+//uint8_t PW[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x57, 0x01}; // power
+//uint8_t SA[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x53, 0x41, 0x01}; // ---???--- maybe Shutter Auto?
+//uint8_t SH[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x53, 0x48, 0x01}; // shutter
+//uint8_t UM[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x55, 0x4d, 0x01}; // usb mode
+//--- SET (with byte(8) = 1) (last byte is parameter)
+//uint8_t OO[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // one on one
+//uint8_t PW[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x50, 0x57, 0x01}; // power
+//uint8_t SH[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x53, 0x48, 0x01}; // shutter
 //
 
 //--------------------- other declarations ----------------------------------------------------------------
@@ -94,7 +125,6 @@ IPAddress subnet(255, 255, 255, 0);             // SM of my Smart-Remote
 
 //--------------------- instances -------------------------------------------------------------------------
 WiFiUDP Udp;
-WiFiClient _wifi_client;
 //
 
 //--------------------- program ---------------------------------------------------------------------------
@@ -141,7 +171,7 @@ void printHelp() {
   Serial.println("Use the following commands:");
   Serial.println("help        - Shows this help");
   Serial.println("info        - Shows infos");
-  Serial.println("wakeup      - sends Wake on LAN to each camera");
+  Serial.println("wakeup      - Wakes up cameras that are in deep sleep (power0 sent)");
   Serial.println("on          - Switches the smart remote on");
   Serial.println("off         - Switches the smart remote off");
   Serial.println("start       - Start recording");
@@ -150,7 +180,7 @@ void printHelp() {
   Serial.println("photo       - Switches to photo mode");
   Serial.println("burst       - Switches to burst mode");
   Serial.println("timelapse   - Switches to timelapse mode");
-  Serial.println("power0      - Turns off all cameras");
+  Serial.println("power0      - Turns off all cameras (deep sleep)");
   Serial.println();
 }
 
@@ -158,7 +188,7 @@ void printInfo() {
   Serial.println();
   Serial.println("--------------- INFO ---------------");
 
-  if (conn) Serial.println("RC is active!");
+  if (conn) Serial.println("RC activated!");
   else Serial.println("RC is off!");
 
   IPAddress myIP = WiFi.softAPIP();
@@ -211,7 +241,6 @@ void stopAP() {
   WiFi.softAPdisconnect(true);
 
   WiFi.mode(WIFI_STA); // Set WiFi in STA mode
-  _wifi_client.stop();
 
   conn = false;
 
@@ -229,7 +258,7 @@ void stopAP() {
   Serial.print(0);
   Serial.println("</rcOn>");
 #else
-  Serial.println("Remote off");
+  Serial.println("Remote turned off");
 #endif
 }
 
@@ -435,12 +464,11 @@ void receiveFromCam() {
 }
 
 void serialPrintLc(uint8_t* lcBuffer) {
-  //for (int y = 0; y < 75; y++) {
   for (int y = 74; y > -1; y--) {
 
     //remove spacing lines
     if (y == 74 ||
-        y == 60 || y == 59 || y == 58 || y == 57 || y == 56 || y == 55 || 
+        y == 60 || y == 59 || y == 58 || y == 57 || y == 56 || y == 55 ||
         y == 45 || y == 44 || y == 43 || y == 42 || y == 41 ||
         y == 21 || y == 20 || y == 19 || y == 18 || y == 17 ||
         y == 14 || y == 13 ||
@@ -525,7 +553,8 @@ void receiveFromSerial() {
       printInfo();
 
     } else if (strstr_P(sString, PSTR("wakeup")) != NULL) {
-      sendWoL();
+      //      sendWoL();
+      wakeCams();
 
     } else {
       //undefiniert
@@ -557,6 +586,21 @@ void heartBeat() {
   }
 }
 
+void wakeCams() { //Wakes up cameras that are in deep sleep ("power0" sent). They are apparently off, but looking for the wifi of the remote
+  if (conn) {
+    Serial.println("Wake up cams!");
+    Udp.stop();
+    WiFi.softAPdisconnect(true);
+    
+    delay(3000);
+
+    WiFi.softAP(ssid, NULL, wifiChannel, 0, maxCams); //ssid, NULL, wifiChannel, 0, maxCams
+    Udp.begin(rcUdpPort);
+  } else {
+    startAP();
+  }
+}
+
 void serialPrintHex(uint8_t msg[], int numBytes) {
   for (int i = 0; i < numBytes; i++) {
     Serial.print(msg[i], HEX);
@@ -573,44 +617,82 @@ void serialPrintMac(uint8_t* bssid) {
   Serial.print(bssid[5], HEX); Serial.print("");
 }
 
-void sendWoL() { //sends Wake on LAN to each camera
-  uint8_t preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-  IPAddress addr(255, 255, 255, 255);
-  bool isActive = conn;
-
-  if (isActive) {
-    Serial.println("Stop AP");
-    stopAP();
-  }
-
-  Udp.begin(9);
-
-  Serial.println();
-
-  for (int x = 0; x < registeredCams; x++) {
-    Udp.beginPacket(addr, 9);
-    Udp.write(preamble, 6);
-
-    for (uint8_t i = 0; i < 16; i++)
-    {
-      Udp.write(cams[x].getMac(), 6);
-    }
-
-    Udp.endPacket();
-
-    Serial.print("WoL: ");
-    serialPrintMac(cams[x].getMac());
-    Serial.println();
-  }
-
-  Udp.stop();
-
-  if (isActive) {
-    Serial.println("Wait 3 seconds");
-    delay(3000);
-    Serial.println("Restart AP");
-    startAP();
-  }
-
-  Serial.println();
-}
+//void sendWoL() { //sends Wake on LAN to each camera - cannot work because there is no WiFi connection
+//  IPAddress addr(10, 5, 5, 9);
+//  bool isActive = conn;
+//
+//  if (isActive) {
+//    stopAP();
+//    delay(50);
+//  }
+//
+//  WiFi.mode(WIFI_AP); // Set WiFi in AP mode
+//  WiFi.softAPConfig(ip, gateway, subnet);
+//  WiFi.softAP("WOL", NULL, wifiChannel, 0, maxCams);
+//
+//  Serial.println();
+//  Serial.printf("Sending WoL to %1x cams", registeredCams);
+//
+//  uint8_t magPac[102];
+//
+//  //for each cam
+//  for (int x = 0; x < registeredCams; x++) {
+//    int j = 0;
+//    uint8_t* camMac = cams[x].getMac();
+//
+//    //6 times 0xFF
+//    for (int i = 0; i < 6; i++, j++) {
+//      magPac[j] = 0xFF;
+//    }
+//
+//    //16 times cams mac
+//    for (int i2 = 0; i2 < 16; i2++) {
+//      for (int c1 = 0; c1 < 6; c1++, j++) {
+//        magPac[j] = camMac[c1];
+//      }
+//    }
+//
+//    //Sending to Port 7
+//    Udp.begin(7);
+//    delay(50);
+//    Udp.beginPacket(addr, 7);
+//    Udp.write(magPac, 102);
+//    if(Udp.endPacket() == 1) Serial.print(" .");
+//    else Serial.print(" err");
+//    Udp.stop();
+//    delay(50);
+//
+//    //Sending to Port 9
+//    Udp.begin(9);
+//    delay(50);
+//    Udp.beginPacket(addr, 9);
+//    Udp.write(magPac, 102);
+//    if(Udp.endPacket() == 1) Serial.print(" .");
+//    else Serial.print(" err");
+//    Udp.stop();
+//    delay(50);
+//
+//
+//  }
+//
+//  Serial.print(" done");
+//  Serial.println();
+//
+//  WiFi.softAPdisconnect(true);
+//  WiFi.disconnect(true);
+//  WiFi.mode(WIFI_STA); // Set WiFi in AP mode
+//
+//  if (isActive) {
+//    Serial.print("Wait 3 seconds for restart RC");
+//    delay(1000);
+//    Serial.print(" .");
+//    delay(1000);
+//    Serial.print(" .");
+//    delay(1000);
+//    Serial.println(" .");
+//    Serial.println("Restart RC...");
+//    startAP();
+//  }
+//
+//  Serial.println();
+//}
