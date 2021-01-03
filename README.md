@@ -1,13 +1,16 @@
 # GoPro-Multiple-Smart-Remote-ESP8266
-This code should show how to control several GoPros with a NodeMCU V1.0 (ESP-12E) or a Wemos D1 mini. It is designed for my purposes on four cameras. (GoPro Hero 5 black, HERO 7 black and HERO 8 tested)
-
-I use the code with a VB.net Windows Forms Application. In this I have named the four cameras with their own names and can assign the individual status of the cameras by referencing from IP to MAC. 
+This sketch provides the simultaneous control of up to 8 GoPros with the serial monitor. It can also be used with GoEasyPro.<br>
+GoPro Hero 5 black, HERO 7 black and HERO 8 tested
 
 A big thank you to theContentMint for the inspiration for UDP and the port being used.
-Another thank you goes to KonradIT for inspiration ever to start with an ESP8266.
+Another thank you goes to KonradIT for inspiration ever to start with an ESP8266.<br>
+<br>
+Suggestions are always welcome
 
 # How to use:
-Change the MAC addresses to yours for ```Cam1Mac``` to ```Cam8Mac```
+Change the MAC addresses to yours for ```Cam1Mac``` to ```Cam8Mac```<br>
+Unprogrammed cameras are recognized and you are asked whether they should be paired. However, this is only temporary until the power supply is interrupted or the module is reset.<br>
+With the pairing request, the mac of the cam is displayed. So the mac of the cam can be found out in a simple way.<br><br>
 
 <b>Open serial monitor and use the following commands:</b> <br>
 ```
@@ -22,7 +25,7 @@ video     - Switches to video mode
 photo     - Switches to photo mode
 burst     - Switches to burst mode
 timelapse - Switches to timelapse mode
-power0    - Turns off all cameras
+power0    - Turns off all cameras (deep sleep)
 ```
 If your camera does not connect, connect a smart remote in the camera while RC is active.
 
