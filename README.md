@@ -1,5 +1,6 @@
 # GoPro-Multiple-Smart-Remote-ESP8266
-This sketch provides the simultaneous control of up to 8 GoPros with the serial monitor. It can also be used with GoEasyPro.<br>
+This sketch provides the simultaneous control of up to 8 GoPros with the serial monitor. The status of all cameras is continuously displayed. <br>
+It can also be used with GoEasyPro.<br>
 GoPro Hero 5 black, HERO 7 black and HERO 8 tested
 
 A big thank you to theContentMint for the inspiration for UDP and the port being used.
