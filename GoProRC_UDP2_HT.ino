@@ -609,8 +609,6 @@ void receiveFromSerial() {
       sendToCam(PW0, 14);
 
     } else if (strstr_P(sString, PSTR("???")) != NULL) {
-#define GOEASYPRO
-      heartBeatThread.setInterval(600);
       //send whoAmI for GoEasyPro
       Serial.println("GPRC");
 
