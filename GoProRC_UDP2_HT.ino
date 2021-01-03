@@ -11,10 +11,10 @@
 
 //--------------------- GoPro MAC, IP and RSSI declarations ------------------------------------------------------------
 //---Change these to yours, set the last three digits to 0x00 for Macs that are not in use
-uint8_t Cam1Mac[6] = {0x04, 0x41, 0x69, 0x4F, 0x0F, 0x4B};
-uint8_t Cam2Mac[6] = {0x04, 0x41, 0x69, 0x5E, 0x4A, 0x33};
-uint8_t Cam3Mac[6] = {0x04, 0x41, 0x69, 0x5F, 0x11, 0x39};
-uint8_t Cam4Mac[6] = {0x04, 0x41, 0x69, 0x5F, 0x72, 0x39};
+uint8_t Cam1Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+uint8_t Cam2Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+uint8_t Cam3Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+uint8_t Cam4Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
 uint8_t Cam5Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
 uint8_t Cam6Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
 uint8_t Cam7Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
@@ -28,6 +28,8 @@ int registeredCams = 0;
 GoProCam cams[maxCams] = {GoProCam(Cam1Mac), GoProCam(Cam2Mac), GoProCam(Cam3Mac), GoProCam(Cam4Mac),
                           GoProCam(Cam5Mac), GoProCam(Cam6Mac), GoProCam(Cam7Mac), GoProCam(Cam8Mac)
                          };
+uint8_t emptyMac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t *ignoreMacArray[4] = {emptyMac, emptyMac, emptyMac, emptyMac};
 //
 
 //--------------------- defines ---------------------------------------------------------------------------
@@ -148,7 +150,7 @@ void setup() {
   Serial.println();
 #ifndef GOEASYPRO
   Serial.println();
-  Serial.println("Ready!");
+  //Serial.println("Ready!");
   printHelp();
 
 #endif
@@ -171,7 +173,7 @@ void printHelp() {
   Serial.println("Use the following commands:");
   Serial.println("help        - Shows this help");
   Serial.println("info        - Shows infos");
-  Serial.println("wakeup      - Wakes up cameras that are in deep sleep (power0 sent)");
+  Serial.println("wakeup      - Wakes up cameras that are in deep sleep (power0 sent)"); //not working without connection
   Serial.println("on          - Switches the smart remote on");
   Serial.println("off         - Switches the smart remote off");
   Serial.println("start       - Start recording");
@@ -180,7 +182,7 @@ void printHelp() {
   Serial.println("photo       - Switches to photo mode");
   Serial.println("burst       - Switches to burst mode");
   Serial.println("timelapse   - Switches to timelapse mode");
-  Serial.println("power0      - Turns off all cameras (deep sleep)");
+  Serial.println("power0      - Turns off all cameras");
   Serial.println();
 }
 
@@ -285,10 +287,10 @@ void getAssignedIp() {
   struct ip4_addr *IPaddress;
   IPAddress address;
   struct station_info *stat_info;
-
   stat_info = wifi_softap_get_station_info();
 
   while (stat_info != NULL) {
+    bool unkwMac = true; //indicates if cam is unknown
     uint8_t* clientMac = stat_info->bssid;
     IPaddress = &stat_info->ip;
     address = IPaddress->addr;
@@ -296,6 +298,7 @@ void getAssignedIp() {
 
     for (int x = 0; x < maxCams; x++) {
       if (memcmp(clientMac, cams[x].getMac(), 6) == 0) {
+        unkwMac = false;
         IPAddress xAdr(cams[x].getIp());
 
         if (xAdr != address) {
@@ -308,12 +311,75 @@ void getAssignedIp() {
           newConnected--;
           numConnected++;
         }
-        break;
+        break; //Mac found, exit for loop
       }
     }
+
+    if (unkwMac) {
+      bool ignore = false;
+      for (int i = 0; i < 4; i++) {
+        if (memcmp(clientMac, ignoreMacArray[i], 6)== 0) {
+          ignore = true;
+          break;
+        }
+      }
+
+      if (!ignore) {
+        Serial.println("Unknown cam detected.");
+        Serial.print("Pair with MAC: ");
+        serialPrintMac(clientMac);
+        Serial.println(" ? [Y/n]");
+        Serial.println();
+        
+        while(!Serial.available());//wait for user input
+        int read = Serial.read();
+        if (read == 89) { //Y
+          if(regNewCam(clientMac, address)){
+            numConnected++;
+            Serial.print("New cam ");
+            Serial.print(registeredCams);
+            Serial.println(" successfully connected to AP");
+            Serial.println();
+          }else{
+            Serial.println("Can't connect new cam to AP");
+            Serial.println("Cam will be ignored!");
+            Serial.println();
+            
+            ignoreMac(clientMac);
+          }
+        } else { //other inputs
+          Serial.println("Cam will be ignored!");
+          Serial.println();
+          
+          ignoreMac(clientMac);
+        }
+        newConnected--;
+      }
+    }
+    
     stat_info = STAILQ_NEXT(stat_info, next);
   }
   wifi_softap_free_station_info();
+}
+
+bool regNewCam(uint8_t* mac, uint32_t ip){
+  if(registeredCams < 8){
+    cams[registeredCams].setMac(mac);
+    cams[registeredCams].setIp(ip);
+    registeredCams++;
+    return true;
+  }else{
+    return false;
+  }
+}
+
+void ignoreMac(uint8_t* mac){
+  for (int i = 0; i < 4; i++) {    
+    if (memcmp(emptyMac, ignoreMacArray[i], 6) == 0) {
+      memcpy(ignoreMacArray[i], mac, 6);                
+      break;
+    }
+  }
 }
 
 byte ReadSerialMonitorString(char* sString) {
@@ -543,7 +609,8 @@ void receiveFromSerial() {
       sendToCam(PW0, 14);
 
     } else if (strstr_P(sString, PSTR("???")) != NULL) {
-      //send whoAmI
+#define GOEASYPRO
+      //send whoAmI for GoEasyPro
       Serial.println("GPRC");
 
     } else if (strstr_P(sString, PSTR("help")) != NULL) {
@@ -553,12 +620,10 @@ void receiveFromSerial() {
       printInfo();
 
     } else if (strstr_P(sString, PSTR("wakeup")) != NULL) {
-      //      sendWoL();
       wakeCams();
 
     } else {
-      //undefiniert
-      Serial.println("unknown command");
+      //Serial.println("unknown command");
     }
   }
 }
@@ -616,83 +681,3 @@ void serialPrintMac(uint8_t* bssid) {
   Serial.print(bssid[4], HEX); Serial.print(":");
   Serial.print(bssid[5], HEX); Serial.print("");
 }
-
-//void sendWoL() { //sends Wake on LAN to each camera - cannot work because there is no WiFi connection
-//  IPAddress addr(10, 5, 5, 9);
-//  bool isActive = conn;
-//
-//  if (isActive) {
-//    stopAP();
-//    delay(50);
-//  }
-//
-//  WiFi.mode(WIFI_AP); // Set WiFi in AP mode
-//  WiFi.softAPConfig(ip, gateway, subnet);
-//  WiFi.softAP("WOL", NULL, wifiChannel, 0, maxCams);
-//
-//  Serial.println();
-//  Serial.printf("Sending WoL to %1x cams", registeredCams);
-//
-//  uint8_t magPac[102];
-//
-//  //for each cam
-//  for (int x = 0; x < registeredCams; x++) {
-//    int j = 0;
-//    uint8_t* camMac = cams[x].getMac();
-//
-//    //6 times 0xFF
-//    for (int i = 0; i < 6; i++, j++) {
-//      magPac[j] = 0xFF;
-//    }
-//
-//    //16 times cams mac
-//    for (int i2 = 0; i2 < 16; i2++) {
-//      for (int c1 = 0; c1 < 6; c1++, j++) {
-//        magPac[j] = camMac[c1];
-//      }
-//    }
-//
-//    //Sending to Port 7
-//    Udp.begin(7);
-//    delay(50);
-//    Udp.beginPacket(addr, 7);
-//    Udp.write(magPac, 102);
-//    if(Udp.endPacket() == 1) Serial.print(" .");
-//    else Serial.print(" err");
-//    Udp.stop();
-//    delay(50);
-//
-//    //Sending to Port 9
-//    Udp.begin(9);
-//    delay(50);
-//    Udp.beginPacket(addr, 9);
-//    Udp.write(magPac, 102);
-//    if(Udp.endPacket() == 1) Serial.print(" .");
-//    else Serial.print(" err");
-//    Udp.stop();
-//    delay(50);
-//
-//
-//  }
-//
-//  Serial.print(" done");
-//  Serial.println();
-//
-//  WiFi.softAPdisconnect(true);
-//  WiFi.disconnect(true);
-//  WiFi.mode(WIFI_STA); // Set WiFi in AP mode
-//
-//  if (isActive) {
-//    Serial.print("Wait 3 seconds for restart RC");
-//    delay(1000);
-//    Serial.print(" .");
-//    delay(1000);
-//    Serial.print(" .");
-//    delay(1000);
-//    Serial.println(" .");
-//    Serial.println("Restart RC...");
-//    startAP();
-//  }
-//
-//  Serial.println();
-//}
