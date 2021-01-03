@@ -1,10 +1,7 @@
 #include "GoProCam.h"
 
-
 GoProCam::GoProCam(uint8_t* mac) {
-  for (int i = 0; i < 6; i++){
-	_mac[i] = mac[i];
-  }
+  memcpy(_mac, mac, 6);
 }
 
 void GoProCam::setIp(uint32_t ip) {
@@ -16,9 +13,7 @@ void GoProCam::resetIp() {
 }
 
 void GoProCam::setMac(uint8_t* mac) {
-  for (int i = 0; i < 6; i++){
-	_mac[i] = mac[i];
-  }
+   memcpy(_mac, mac, 6);
 }
 
 uint32_t GoProCam::getIp() {
