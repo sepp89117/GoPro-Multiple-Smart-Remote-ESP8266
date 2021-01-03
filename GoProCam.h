@@ -12,7 +12,6 @@ class GoProCam {
     void setIp(uint32_t ip);
     void resetIp();
   	void setMac(uint8_t* mac);
-  	//void keepWifiAlive(bool keepAlive);
   	
   	uint32_t getIp();
   	uint8_t* getMac();
@@ -27,4 +26,5 @@ class GoProCam {
 /*
 || @changelog
 || | 1.0 2020-12-13 - Sebastian Balzer : Initial Release
+|| | 1.1 2021-01-03 - Sebastian Balzer : Changed for-loop to memcpy function
 */
