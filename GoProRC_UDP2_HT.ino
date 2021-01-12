@@ -11,10 +11,10 @@
 
 //--------------------- GoPro MAC, IP and RSSI declarations ------------------------------------------------------------
 //---Change these to yours, set the last three digits to 0x00 for Macs that are not in use
-uint8_t Cam1Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
-uint8_t Cam2Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
-uint8_t Cam3Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
-uint8_t Cam4Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
+uint8_t Cam1Mac[6] = {0x04, 0x41, 0x69, 0x4F, 0x0F, 0x4B};
+uint8_t Cam2Mac[6] = {0x04, 0x41, 0x69, 0x5E, 0x4A, 0x33};
+uint8_t Cam3Mac[6] = {0x04, 0x41, 0x69, 0x5F, 0x11, 0x39};
+uint8_t Cam4Mac[6] = {0x04, 0x41, 0x69, 0x5F, 0x72, 0x39};
 uint8_t Cam5Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
 uint8_t Cam6Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
 uint8_t Cam7Mac[6] = {0x04, 0x41, 0x69, 0x00, 0x00, 0x00};
@@ -73,10 +73,15 @@ uint8_t CMp[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0
 uint8_t CMb[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x02}; // change mode (2: 'burst')
 uint8_t CMl[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x03}; // change mode (3: 'timelapse')
 uint8_t CMd[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x43, 0x4D, 0x06}; // change mode (6: 'default mode')
-uint8_t OO1[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // used by rc, keeps udp connected
 uint8_t wt[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x77, 0x74}; // wifi
 uint8_t st[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x74}; // status request
 uint8_t lc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6C, 0x63, 0x05}; // get status display (w=60px, h=75px, 1bpp)
+uint8_t getTM[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'Y', 'Y', 0x00, 0x07, 0x1A, 0x00, 0x00}; // get Date and Time (resp: ?, Y(h), Y(l), M, D, H, m, s, ?)
+uint8_t getBL[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'Y', 'Y', 0x00, 0x08, 0x00, 0x00, 0x00}; // get battery level, 2nd byte in response is battery level in %
+
+//TODO: get "set date time" working
+uint8_t setTM[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'Y', 'Y', 0x00, 0x07, 0x1B, 0x00, 0x01, 0x07, 0xE4, 0x9, 0x8, 0x7, 0x6, 0x5}; // set Date and Time 08.09.2020, 07:06:05 -> not working
+
 
 //--------------------------- List of commands, supported by Hero5 black ---------------------------
 //--- GET (with byte(8) = 0)
@@ -100,7 +105,8 @@ uint8_t lc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 //uint8_t wt[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x77, 0x74}; // wifi?
 //--- SET (with byte(8) = 0) (last byte is parameter)
 //uint8_t CM[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x43, 0x4d, 0x01}; // cam mode
-//uint8_t OO[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // one on one
+//uint8_t OO0[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x00}; // one on one -off
+//uint8_t OO1[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // one on one -on
 //uint8_t PV[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x56, 0x01}; // preview
 //uint8_t PW[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x57, 0x01}; // power
 //uint8_t SA[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x53, 0x41, 0x01}; // ---???--- maybe Shutter Auto?
@@ -139,7 +145,7 @@ void setup() {
   WiFi.mode(WIFI_STA); // Set WiFi in STA mode
   Serial.begin(115200);
   while (!Serial); // wait for serial attach
-  
+
   for (uint8_t i = 0; i < maxCams; i++) { //count registered cams
     uint8_t* mac = cams[i].getMac();
     if (mac[3] != 0x0 || mac[4] != 0x0 || mac[5] != 0x0) registeredCams++;
@@ -207,6 +213,35 @@ void printInfo() {
 
   Serial.print("Cams connected: ");
   Serial.println(numConnected);
+
+  if (numConnected > 0){
+    for(int i = 0; i < maxCams; i++){  
+      if (cams[i].getIp() > 0){
+        Serial.println();
+        Serial.printf("--------- Cam %1x data ---------", i + 1);
+        Serial.println();
+        
+        Serial.print("IP: ");
+        serialPrintIp(cams[i].getIp());
+        Serial.println();
+
+        Serial.print("MAC: ");
+        serialPrintMac(cams[i].getMac());
+        Serial.println();
+
+        Serial.print("DateTime: ");
+        Serial.println(cams[i].getTimeString());
+
+        Serial.print("Batt level: ");
+        Serial.print(cams[i].getBattLevel());
+        Serial.println("%");
+        
+        Serial.printf("------- Cam %1x data end -------", i + 1);
+        Serial.println();
+      }
+    }
+  }
+  
   Serial.println("------------------------------------------------");
   Serial.println();
 }
@@ -310,6 +345,9 @@ void getAssignedIp() {
 
           newConnected--;
           numConnected++;
+          
+          sendToSingleCam(getTM, 18, address); //get date and time
+          receiveFromCam();          
         }
         break; //Mac found, exit for-loop
       }
@@ -325,7 +363,7 @@ void getAssignedIp() {
       }
 
       if (!ignore) {
-        Serial.println("Unknown cam detected.");
+        Serial.println("Unknown MAC detected.");
         Serial.print("Pair with MAC: ");
         serialPrintMac(clientMac);
         Serial.println(" ? [Y/n]");
@@ -427,6 +465,24 @@ void sendToCam(uint8_t* req, int numBytes) {
   }
 }
 
+void sendToSingleCam(uint8_t* req, int numBytes, uint32_t address) {
+  Udp.beginPacket(address, camUdpPort);
+  Udp.write(req, numBytes);
+  Udp.endPacket();
+
+  //count up
+  if (lowCounter >= 255) {
+    highCounter++;
+    lowCounter = 0;
+  }
+  if (highCounter >= 255) {
+    highCounter = 0;
+  }
+  lowCounter++;
+
+  receiveFromCam();
+}
+
 void receiveFromCam() {
   yield();
   unsigned long receiveStart = millis();
@@ -459,6 +515,33 @@ void receiveFromCam() {
           Serial.print("\" in ");
           serialPrintHex(packetBuffer, numBytes);
           Serial.println(">");
+        } else if (strstr_P(inCmd, PSTR("YY")) != NULL) {
+          if (packetBuffer[17] == 0xFC) {
+            //Serial.println(" cmd fail!");
+          } else if (packetBuffer[15] == 0x07 && packetBuffer[16] == 0x1A){
+            //got DateTime from cam
+            cams[i].setCamTimeGotMillis(millis());
+            uint8_t camTime[7] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+            for(int b = 0; b < 8; b++){
+              camTime[b] = packetBuffer[b+20];
+            }
+            cams[i].setCamTime(camTime);
+
+            Serial.print("<TM>");
+            Serial.print(cams[i].getTimeString());
+            Serial.print("</TM>@");
+            serialPrintMac((uint8_t*)cams[i].getMac());
+            Serial.println();
+          } else if (packetBuffer[15] == 0x08 && packetBuffer[16] == 0x00){
+            //got battery level from cam
+            cams[i].setBattLevel(packetBuffer[20]);
+
+            Serial.print("<BL>");
+            Serial.print(cams[i].getBattLevel());
+            Serial.print("</BL>@");
+            serialPrintMac((uint8_t*)cams[i].getMac());
+            Serial.println();
+          } 
         } else {
           Serial.print("<");
           Serial.print(inCmd);
@@ -470,6 +553,7 @@ void receiveFromCam() {
           serialPrintMac((uint8_t*)cams[i].getMac());
           Serial.println();
         }
+        
 #else
 
         if (packetBuffer[13] == 0x1) {
@@ -519,10 +603,35 @@ void receiveFromCam() {
 #ifdef PRINTLCD
             serialPrintLc(packetBuffer);
 #endif
+          } else if (strstr_P(inCmd, PSTR("YY")) != NULL) {
+            if (packetBuffer[17] == 0xFC) {
+              Serial.println(" cmd fail!");
+              Serial.println();
+            } else if (packetBuffer[15] == 0x07 && packetBuffer[16] == 0x1A){
+              //got DateTime from Cam - TODO: make more elegant
+              cams[i].setCamTimeGotMillis(millis());
+              uint8_t camTime[7] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+              for(int b = 0; b < 8; b++){
+                camTime[b] = packetBuffer[b+20];
+              }
+              cams[i].setCamTime(camTime);              
+            } else if (packetBuffer[15] == 0x08 && packetBuffer[16] == 0x00){
+              //got battery level from Cam- TODO: make more elegant
+              cams[i].setBattLevel(packetBuffer[20]);
+            } else {
+              //got YY from Cam
+              Serial.print("Cam ");
+              Serial.print(i + 1);
+              Serial.println(" has sent: ");
+              Serial.print(inCmd);
+              Serial.print(", Buffer: ");
+              serialPrintHex(packetBuffer, numBytes);
+              Serial.println();
+              Serial.println();
+            }
           }
         }
 #endif
-
         break;
       }
     }
@@ -595,6 +704,18 @@ void receiveFromSerial() {
       sendToCam(CMl, 14); //change mode to timelapse
       delay(50);
 
+    } else if (strstr_P(sString, PSTR("<gtm>")) != NULL || strstr_P(sString, PSTR("time?")) != NULL) {
+      sendToCam(getTM, 18); //get date and time
+      delay(50);      
+
+    } else if (strstr_P(sString, PSTR("<stm>")) != NULL || strstr_P(sString, PSTR("time!")) != NULL) {
+      sendToCam(setTM, 25); //set date and time
+      delay(50);
+
+    } else if (strstr_P(sString, PSTR("battery?")) != NULL) {
+      sendToCam(getBL, 18); //get battery level
+      delay(50);
+
     } else if (strstr_P(sString, PSTR("<pw0>")) != NULL || strstr_P(sString, PSTR("power0")) != NULL) {
       sendToCam(PW0, 14);
       delay(200);
@@ -643,9 +764,8 @@ void heartBeat() {
 
     cmdIndicator++;
   } else if (cmdIndicator >= 2) {
-    //sendToCam(OO0, 14); //Not really necessary
-    sendToCam(OO1, 14); //Necessary to keep the cam connected 
-
+    sendToCam(getBL, 18); //get battery level
+          
     cmdIndicator = 0;
   }
 }
@@ -666,7 +786,7 @@ void wakeCams() { //Wakes up cameras that are in deep sleep ("power0" sent). The
 }
 
 void serialPrintHex(uint8_t msg[], int numBytes) {
-  for (uint8_t i = 0; i < numBytes; i++) {
+  for (int i = 0; i < numBytes; i++) {
     Serial.print(msg[i], HEX);
     if (i != numBytes - 1) Serial.print(" ");
   }
@@ -677,6 +797,16 @@ void serialPrintMac(uint8_t* bssid) {
     Serial.print(bssid[i], HEX);
     if (i < 5) {
       Serial.print(':');
+    }
+  }
+}
+
+void serialPrintIp(uint32_t ipAddress) {
+  IPAddress ipAdr(ipAddress);
+  for (uint8_t i = 0; i < 4; i++) {
+    Serial.print(ipAdr[i]);
+    if (i < 3) {
+      Serial.print('.');
     }
   }
 }
