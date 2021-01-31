@@ -49,6 +49,7 @@ extern "C" void preinit() {
 uint8_t lowCounter = 0;                                  // durable counter 1
 uint8_t highCounter = 0;                                 // durable counter 2
 uint8_t cmdIndicator = 0;                                // "wt is send" counter
+bool lastCmd = false;                                    // switches between two different commands
 //
 
 //--------------------- HT Threads ------------------------------------------------------------------------
@@ -82,7 +83,6 @@ uint8_t getBL[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0
 //TODO: get "set date time" working
 uint8_t setTM[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'Y', 'Y', 0x00, 0x07, 0x1B, 0x00, 0x01, 0x07, 0xE4, 0x9, 0x8, 0x7, 0x6, 0x5}; // set Date and Time 08.09.2020, 07:06:05 -> not working
 
-
 //--------------------------- List of commands, supported by Hero5 black ---------------------------
 //--- GET (with byte(8) = 0)
 //uint8_t cc[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63, 0x63}; // cam capabilities
@@ -107,6 +107,7 @@ uint8_t setTM[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0
 //uint8_t CM[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x43, 0x4d, 0x01}; // cam mode
 //uint8_t OO0[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x00}; // one on one -off
 //uint8_t OO1[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // one on one -on
+//uint8_t PA[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x41, 0x02, 0x01}; //toggle cam mode incremental
 //uint8_t PV[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x56, 0x01}; // preview
 //uint8_t PW[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x57, 0x01}; // power
 //uint8_t SA[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x53, 0x41, 0x01}; // ---???--- maybe Shutter Auto?
@@ -116,7 +117,7 @@ uint8_t setTM[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0
 //uint8_t OO[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x01}; // one on one
 //uint8_t PW[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x50, 0x57, 0x01}; // power
 //uint8_t SH[]= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x53, 0x48, 0x01}; // shutter
-//
+//and a lot of YY commands, take a look at https://orangkucing.github.io/Hero4_I2C_Commands.html
 
 //--------------------- other declarations ----------------------------------------------------------------
 const unsigned int rcUdpPort = 8383;           // Port der Fernbedienung
@@ -214,13 +215,13 @@ void printInfo() {
   Serial.print("Cams connected: ");
   Serial.println(numConnected);
 
-  if (numConnected > 0){
-    for(int i = 0; i < maxCams; i++){  
-      if (cams[i].getIp() > 0){
+  if (numConnected > 0) {
+    for (int i = 0; i < maxCams; i++) {
+      if (cams[i].getIp() > 0) {
         Serial.println();
         Serial.printf("--------- Cam %1x data ---------", i + 1);
         Serial.println();
-        
+
         Serial.print("IP: ");
         serialPrintIp(cams[i].getIp());
         Serial.println();
@@ -235,13 +236,13 @@ void printInfo() {
         Serial.print("Batt level: ");
         Serial.print(cams[i].getBattLevel());
         Serial.println("%");
-        
+
         Serial.printf("------- Cam %1x data end -------", i + 1);
         Serial.println();
       }
     }
   }
-  
+
   Serial.println("------------------------------------------------");
   Serial.println();
 }
@@ -345,9 +346,9 @@ void getAssignedIp() {
 
           newConnected--;
           numConnected++;
-          
+
           sendToSingleCam(getTM, 18, address); //get date and time
-          receiveFromCam();          
+          receiveFromCam();
         }
         break; //Mac found, exit for-loop
       }
@@ -518,12 +519,12 @@ void receiveFromCam() {
         } else if (strstr_P(inCmd, PSTR("YY")) != NULL) {
           if (packetBuffer[17] == 0xFC) {
             //Serial.println(" cmd fail!");
-          } else if (packetBuffer[15] == 0x07 && packetBuffer[16] == 0x1A){
+          } else if (packetBuffer[15] == 0x07 && packetBuffer[16] == 0x1A) {
             //got DateTime from cam
             cams[i].setCamTimeGotMillis(millis());
             uint8_t camTime[7] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-            for(int b = 0; b < 8; b++){
-              camTime[b] = packetBuffer[b+20];
+            for (int b = 0; b < 8; b++) {
+              camTime[b] = packetBuffer[b + 20];
             }
             cams[i].setCamTime(camTime);
 
@@ -532,7 +533,7 @@ void receiveFromCam() {
             Serial.print("</TM>@");
             serialPrintMac((uint8_t*)cams[i].getMac());
             Serial.println();
-          } else if (packetBuffer[15] == 0x08 && packetBuffer[16] == 0x00){
+          } else if (packetBuffer[15] == 0x08 && packetBuffer[16] == 0x00) {
             //got battery level from cam
             cams[i].setBattLevel(packetBuffer[20]);
 
@@ -541,7 +542,7 @@ void receiveFromCam() {
             Serial.print("</BL>@");
             serialPrintMac((uint8_t*)cams[i].getMac());
             Serial.println();
-          } 
+          }
         } else {
           Serial.print("<");
           Serial.print(inCmd);
@@ -553,7 +554,7 @@ void receiveFromCam() {
           serialPrintMac((uint8_t*)cams[i].getMac());
           Serial.println();
         }
-        
+
 #else
 
         if (packetBuffer[13] == 0x1) {
@@ -607,15 +608,15 @@ void receiveFromCam() {
             if (packetBuffer[17] == 0xFC) {
               Serial.println(" cmd fail!");
               Serial.println();
-            } else if (packetBuffer[15] == 0x07 && packetBuffer[16] == 0x1A){
+            } else if (packetBuffer[15] == 0x07 && packetBuffer[16] == 0x1A) {
               //got DateTime from Cam - TODO: make more elegant
               cams[i].setCamTimeGotMillis(millis());
               uint8_t camTime[7] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-              for(int b = 0; b < 8; b++){
-                camTime[b] = packetBuffer[b+20];
+              for (int b = 0; b < 8; b++) {
+                camTime[b] = packetBuffer[b + 20];
               }
-              cams[i].setCamTime(camTime);              
-            } else if (packetBuffer[15] == 0x08 && packetBuffer[16] == 0x00){
+              cams[i].setCamTime(camTime);
+            } else if (packetBuffer[15] == 0x08 && packetBuffer[16] == 0x00) {
               //got battery level from Cam- TODO: make more elegant
               cams[i].setBattLevel(packetBuffer[20]);
             } else {
@@ -706,7 +707,7 @@ void receiveFromSerial() {
 
     } else if (strstr_P(sString, PSTR("<gtm>")) != NULL || strstr_P(sString, PSTR("time?")) != NULL) {
       sendToCam(getTM, 18); //get date and time
-      delay(50);      
+      delay(50);
 
     } else if (strstr_P(sString, PSTR("<stm>")) != NULL || strstr_P(sString, PSTR("time!")) != NULL) {
       sendToCam(setTM, 25); //set date and time
@@ -764,8 +765,11 @@ void heartBeat() {
 
     cmdIndicator++;
   } else if (cmdIndicator >= 2) {
-    sendToCam(getBL, 18); //get battery level
-          
+    //switch between two different commands
+    if (!lastCmd) sendToCam(getBL, 18); //get battery level
+    else sendToCam(getTM, 18); //get date and time
+    lastCmd = !lastCmd;
+
     cmdIndicator = 0;
   }
 }
@@ -795,9 +799,7 @@ void serialPrintHex(uint8_t msg[], int numBytes) {
 void serialPrintMac(uint8_t* bssid) {
   for (uint8_t i = 0; i < 6; i++) {
     Serial.print(bssid[i], HEX);
-    if (i < 5) {
-      Serial.print(':');
-    }
+    if (i < 5) Serial.print(':');
   }
 }
 
@@ -805,8 +807,6 @@ void serialPrintIp(uint32_t ipAddress) {
   IPAddress ipAdr(ipAddress);
   for (uint8_t i = 0; i < 4; i++) {
     Serial.print(ipAdr[i]);
-    if (i < 3) {
-      Serial.print('.');
-    }
+    if (i < 3) Serial.print('.');
   }
 }
