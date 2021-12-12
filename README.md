@@ -7,6 +7,7 @@ A big thank you to theContentMint for the inspiration for UDP and the port being
 Another thank you goes to KonradIT for inspiration ever to start with an ESP8266.<br>
 <br>
 Suggestions are always welcome
+Look also https://github.com/sepp89117/GoPro_ESP32_TFT_Touch-Control
 
 # How to use:
 Change the MAC addresses to yours for ```Cam1Mac``` to ```Cam8Mac```<br>
