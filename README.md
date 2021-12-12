@@ -6,7 +6,7 @@ GoPro Hero 5 black, HERO 7 black and HERO 8 tested
 A big thank you to theContentMint for the inspiration for UDP and the port being used.
 Another thank you goes to KonradIT for inspiration ever to start with an ESP8266.<br>
 <br>
-Suggestions are always welcome
+Suggestions are always welcome<br>
 Look also https://github.com/sepp89117/GoPro_ESP32_TFT_Touch-Control
 
 # How to use:
